@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   process:
-    if: github.event.label.name == 'ai-approved'
+    if: github.event.label.name == 'horme-ready'
 
     runs-on: ubuntu-latest
 
