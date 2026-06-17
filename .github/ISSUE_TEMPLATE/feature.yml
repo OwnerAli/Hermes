@@ -1,0 +1,22 @@
+name: AI Feature Request
+
+description: Request an AI-generated feature
+
+body:
+
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin
+      placeholder: Xenith
+
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      placeholder: action
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
