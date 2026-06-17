@@ -14,13 +14,18 @@ from git import Repo
 WORKDIR = os.getcwd()
 SKILL_DIR = os.path.join(WORKDIR, "skills")
 
-# Must exactly match the issue-form labels in .github/ISSUE_TEMPLATE/*.yml
-FIELD_LABELS = ("Plugin", "Skill", "Description", "Configuration")
+FIELD_LABELS = ("Plugin", "Skill", "Description")
 
 FIELD_PATTERN = re.compile(
     rf"^#{{1,6}}\s*({'|'.join(FIELD_LABELS)})\s*$",
     re.MULTILINE
 )
+
+PLUGIN_REPOS = {
+    "Xenith": "OwnerAli/Xenith",
+    "Jetpacks": "OwnerAli/Jetpacks",
+    "CustomDrops": "OwnerAli/CustomDrops",
+}
 
 
 # ---------------------------
@@ -28,16 +33,6 @@ FIELD_PATTERN = re.compile(
 # ---------------------------
 
 def parse_issue_fields(body: str) -> dict:
-    """
-    Split a GitHub issue-form body into {label: value} pairs.
-
-    GitHub renders each form field as a markdown heading matching its
-    `label` (e.g. "### Skill"), followed by the submitted value. This
-    anchors on the known field labels themselves (rather than guessing
-    field boundaries from capitalization), so it doesn't break when a
-    value is short, is the last field, or happens to contain text that
-    looks like a heading.
-    """
     matches = list(FIELD_PATTERN.finditer(body))
     fields = {}
 
@@ -74,11 +69,6 @@ def main():
     repo_full = os.environ["REPOSITORY"]
     token = os.environ["OWNERALI_PAT"]
 
-    owner, repo_name = repo_full.split("/")
-
-    # ---------------------------
-    # GitHub client
-    # ---------------------------
     gh = Github(auth=Auth.Token(token))
     repo = gh.get_repo(repo_full)
     issue = repo.get_issue(issue_number)
@@ -89,52 +79,48 @@ def main():
     plugin = fields.get("Plugin")
     skill = fields.get("Skill")
     description = fields.get("Description")
-    config = fields.get("Configuration")
 
-    # ---------------------------
-    # Load skill context
-    # ---------------------------
+    target_repo = PLUGIN_REPOS.get(plugin)
+
+    if not target_repo:
+        issue.create_comment(f"Unknown plugin: `{plugin}`")
+        return
+
     skill_context = load_skill(skill or "")
 
     if not skill_context:
         issue.create_comment(f"Skill not found: `{skill}`")
         return
 
-    # ---------------------------
-    # Gemini client
-    # ---------------------------
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
 
     if not gemini_api_key:
-        issue.create_comment("Setup error: `GEMINI_API_KEY` secret is missing or empty.")
+        issue.create_comment("Missing GEMINI_API_KEY")
         return
 
-    client = genai.Client(
-        api_key=gemini_api_key
-    )
+    client = genai.Client(api_key=gemini_api_key)
 
     prompt = """
-    You are an expert Java Minecraft plugin developer.
+You are an expert Java Minecraft plugin developer.
 
-    ## SKILL CONTEXT
-    {skill_context}
+## SKILL CONTEXT
+{skill_context}
 
-    ## PROJECT
-    Plugin: {plugin}
+## PROJECT
+Plugin: {plugin}
 
-    ## TASK
-    {description}
+## TASK
+{description}
 
-    ## RULES
-    - Return ONLY files in this format:
+## RULES
+- Return ONLY files in this format:
 
-    <file path="src/.../Example.java">
-    public class Example {{ }}
-    </file>
+<file path="src/.../Example.java">
+public class Example {{ }}
+</file>
 
-    - Follow existing architecture patterns.
-    - Do not add explanations. JUST CODE
-    """.format(
+- No explanations.
+""".format(
         skill_context=skill_context,
         plugin=plugin,
         description=description
@@ -147,9 +133,6 @@ def main():
 
     output = response.text
 
-    # ---------------------------
-    # Parse files from Gemini output
-    # ---------------------------
     files = re.findall(
         r'<file path="(.*?)">(.*?)</file>',
         output,
@@ -161,38 +144,49 @@ def main():
         return
 
     # ---------------------------
-    # Create branch
+    # Clone target repo
     # ---------------------------
-    branch_name = f"ai/issue-{issue_number}"
 
-    repo_git = Repo(WORKDIR)
+    branch_name = f"ai/issue-{issue_number}"
+    target_dir = os.path.join(os.getcwd(), "target")
+
+    run([
+        "git",
+        "clone",
+        f"https://x-access-token:{token}@github.com/{target_repo}.git",
+        target_dir
+    ])
+
+    repo_git = Repo(target_dir)
     repo_git.git.checkout("-b", branch_name)
 
     # ---------------------------
     # Write files
     # ---------------------------
+
     for path, content in files:
-        full_path = os.path.join(WORKDIR, path)
+        full_path = os.path.join(target_dir, path)
 
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
         with open(full_path, "w", encoding="utf-8") as f:
             f.write(content.strip())
 
-        print(f"Written: {path}")
+    # ---------------------------
+    # Commit + push
+    # ---------------------------
 
-    # ---------------------------
-    # Commit changes
-    # ---------------------------
     repo_git.git.add(all=True)
     repo_git.index.commit(f"AI: Implement {skill} for issue #{issue_number}")
-
     repo_git.git.push("--set-upstream", "origin", branch_name)
 
     # ---------------------------
-    # Create PR
+    # PR
     # ---------------------------
-    pr = repo.create_pull(
+
+    target_github_repo = gh.get_repo(target_repo)
+
+    pr = target_github_repo.create_pull(
         title=f"[AI] {skill} - Issue #{issue_number}",
         body=f"""
 AI-generated implementation.
@@ -206,12 +200,10 @@ Closes #{issue_number}
         base="main"
     )
 
-    # ---------------------------
-    # Comment back on issue
-    # ---------------------------
     issue.create_comment(
-        f"""AI Implementation Complete!
+        f"""AI Done!
 
+- Repo: `{target_repo}`
 - Branch: `{branch_name}`
 - PR: {pr.html_url}
 """
