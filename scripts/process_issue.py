@@ -125,23 +125,19 @@ def main():
     ## TASK
     {description}
 
-    ## CONFIGURATION
-    {config}
-
     ## RULES
     - Return ONLY files in this format:
 
     <file path="src/.../Example.java">
-    public class Example { }
+    public class Example {{ }}
     </file>
 
     - Follow existing architecture patterns.
     - Do not add explanations. JUST CODE
     """.format(
-    skill_context=skill_context,
-    plugin=plugin,
-    description=description,
-    config=config
+        skill_context=skill_context,
+        plugin=plugin,
+        description=description
     )
 
     response = client.models.generate_content(
