@@ -58,7 +58,7 @@ jobs:
 
           REPOSITORY: ${{ github.repository }}
 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.OWNERALI_PAT }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
         run: python scripts/process_issue.py
