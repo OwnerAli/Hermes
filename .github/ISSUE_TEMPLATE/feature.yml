@@ -4,17 +4,26 @@ description: Request an AI-generated feature
 
 body:
 
-  - type: input
+  - type: dropdown
     id: plugin
     attributes:
-      label: Plugin
-      placeholder: Xenith
+      label: Skill
+      description: Select the AI skill to use
+      options:
+        - Xenith
+    validations:
+      required: true
 
-  - type: input
+  - type: dropdown
     id: skill
     attributes:
       label: Skill
-      placeholder: action
+      description: Select the AI skill to use
+      options:
+        - Action
+        - Condition
+    validations:
+      required: true
 
   - type: textarea
     id: description
