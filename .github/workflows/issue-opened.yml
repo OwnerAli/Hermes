@@ -17,15 +17,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------
+      # Checkout full repo
+      # (IMPORTANT for GitPython + PR branch creation)
+      # -----------------------
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      # -----------------------
+      # Python setup
+      # -----------------------
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      # -----------------------
+      # Install dependencies
+      # -----------------------
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
+      # -----------------------
+      # Configure Git identity
+      # (REQUIRED for commits + PR branch pushes)
+      # -----------------------
+      - name: Configure Git
+        run: |
+          git config user.name "horme-bot"
+          git config user.email "horme-bot@users.noreply.github.com"
+
+      # -----------------------
+      # Run pipeline
+      # -----------------------
       - name: Run Pipeline
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
