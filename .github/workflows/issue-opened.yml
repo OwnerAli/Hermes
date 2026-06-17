@@ -19,13 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: 22
+          python-version: "3.12"
 
-      - run: npm install
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
 
-      - name: Process Issue
+      - name: Run Pipeline
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -34,7 +35,6 @@ jobs:
           REPOSITORY: ${{ github.repository }}
 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-        run: node scripts/process-issue.js
+        run: python scripts/process_issue.py
