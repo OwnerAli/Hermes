@@ -101,7 +101,8 @@ public class ExampleAction extends AbstractAction {
 
 Return ONLY code in this format:
 
-<file path="src/main/java/.../YourAction.java"> ...java code... </file>
+ALL ACTION IMPLEMENTATIONS GO UNDER THIS PATH:
+<file path="src/main/java/me/ogali/xenithlibrary/actions/impl/YourAction.java"> ...java code... </file>
 
 No explanations.
 No markdown.
