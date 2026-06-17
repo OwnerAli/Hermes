@@ -72,7 +72,7 @@ def run(cmd):
 def main():
     issue_number = int(os.environ["ISSUE_NUMBER"])
     repo_full = os.environ["REPOSITORY"]
-    token = os.environ["GITHUB_TOKEN"]
+    token = os.environ["OWNERALI_PAT"]
 
     owner, repo_name = repo_full.split("/")
 
