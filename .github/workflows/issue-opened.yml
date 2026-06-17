@@ -1,21 +1,17 @@
 name: AI Implementation
-
 on:
   issues:
     types:
       - labeled
-
 permissions:
   contents: write
   pull-requests: write
   issues: write
-
 jobs:
   process:
     if: github.event.label.name == 'horme-ready'
-
     runs-on: ubuntu-latest
-
+    environment: agents
     steps:
       # -----------------------
       # Checkout full repo
@@ -24,20 +20,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+          token: ${{ secrets.OWNERALI_PAT }}
       # -----------------------
       # Python setup
       # -----------------------
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       # -----------------------
       # Install dependencies
       # -----------------------
       - name: Install Dependencies
         run: pip install -r requirements.txt
-
       # -----------------------
       # Configure Git identity
       # (REQUIRED for commits + PR branch pushes)
@@ -46,7 +40,6 @@ jobs:
         run: |
           git config user.name "horme-bot"
           git config user.email "horme-bot@users.noreply.github.com"
-
       # -----------------------
       # Run pipeline
       # -----------------------
@@ -55,10 +48,7 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-
           REPOSITORY: ${{ github.repository }}
-
-          GITHUB_TOKEN: ${{ secrets.OWNERALI_PAT }}
+          OWNERALI_PAT: ${{ secrets.OWNERALI_PAT }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
         run: python scripts/process_issue.py
