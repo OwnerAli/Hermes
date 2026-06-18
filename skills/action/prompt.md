@@ -4,29 +4,37 @@ Actions are runtime executable logic triggered by other plugins.
 
 All actions must:
 
-Extend AbstractAction
-Implement:
-execute(ActionContext context)
-serialize()
-applyEdit(String field, String value)
-fromConfig(DomainConfig config) (static factory)
+- Extend AbstractAction
+- Implement:
+  - execute(ActionContext context)
+  - serialize()
+  - applyEdit(String field, String value)
+  - fromConfig(DomainConfig config) (static factory)
 
 Always check:
-rolledSuccessfully() first
+- rolledSuccessfully() first
 
 If PlaceholderAPI is enabled:
+- XenithLibrary.isPapiEnabled()
+- PlaceholderAPI.setPlaceholders(player, message)
 
-XenithLibrary.isPapiEnabled()
+TEXT UTILITIES:
+- All player-facing messages must use Chat.colorize(text)
 
-PlaceholderAPI.setPlaceholders(player, message)
-TEXT UTILITIES
+BEHAVIOR RULES:
+- Match existing Xenith action patterns from the provided context
+- If a new Action is created, it MUST be registered in ActionRegistry
+  following the existing registerType pattern
+- serialize() must extend super.serialize() and use LinkedHashMap
+- Always preserve existing fields in serialization
+- Never overwrite existing files unless explicitly required
 
-All player-facing messages must be:
+OUTPUT FORMAT:
 
-Chat.colorize(text)
+<file path="java/me/ogali/xenithlibrary/actions/impl/YourAction.java">
+...FULL JAVA CLASS...
+</file>
 
-Return ONLY code in this format:
-
-ALL ACTION IMPLEMENTATIONS GO UNDER THIS PATH: me/ogali/xenithlibrary/actions/impl/
+You may output multiple files if required (for example, registry updates).
 
 No explanations. No markdown. No commentary.
