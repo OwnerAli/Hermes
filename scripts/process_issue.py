@@ -2,6 +2,7 @@ import json
 import os
 import re
 import subprocess
+import random
 
 from github import Github, Auth
 from google import genai
@@ -27,6 +28,25 @@ PLUGIN_REPOS = {
     "Jetpacks": "OwnerAli/Jetpacks",
     "CustomDrops": "OwnerAli/CustomDrops",
 }
+
+
+# ---------------------------
+# HERMES UI LAYER (NEW)
+# ---------------------------
+
+PHRASES = [
+    "Hermes has received the request.",
+    "Message en route to Olympus systems.",
+    "The forge begins processing.",
+    "Request acknowledged by Hermes core.",
+    "Routing task through divine pipeline."
+]
+
+EMOJIS = ["⚡", "🜂", "🧠", "⚙️", "📦", "✨", "🔱"]
+
+
+def hermes_stamp():
+    return f"{random.choice(EMOJIS)} Hermes // {random.choice(PHRASES)}"
 
 
 # ---------------------------
@@ -162,6 +182,17 @@ def main():
     if not gemini_api_key:
         issue.create_comment("Missing GEMINI_API_KEY")
         return
+
+    # ---------------------------
+    # HERMES START NOTIFICATION (NEW)
+    # ---------------------------
+
+    issue.create_comment(
+        f"""{hermes_stamp()}
+
+Hermes has taken your request and is now processing it.
+"""
+    )
 
     # ---------------------------
     # Clone target repo
@@ -318,12 +349,23 @@ Closes #{issue_number}
         base="main"
     )
 
-    issue.create_comment(
-        f"""AI Done!
+    # ---------------------------
+    # FINAL HERMES COMMENT (UPGRADED)
+    # ---------------------------
 
-- Repo: `{target_repo}`
-- Branch: `{branch_name}`
-- PR: {pr.html_url}
+    issue.create_comment(
+        f"""
+{hermes_stamp()}
+
+---
+
+📦 Repo: `{target_repo}`
+🌿 Branch: `{branch_name}`
+🔀 PR: {pr.html_url}
+
+---
+
+> Hermes has completed execution of this request.
 """
     )
 
