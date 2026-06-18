@@ -11,8 +11,9 @@ All actions must:
   - applyEdit(String field, String value)
   - fromConfig(DomainConfig config) (static factory)
 
-Always check:
-- rolledSuccessfully() first
+Always:
+- check rolledSuccessfully() first
+- Use Lombok if present
 
 If PlaceholderAPI is enabled:
 - XenithLibrary.isPapiEnabled()
