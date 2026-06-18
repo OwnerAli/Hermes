@@ -9,7 +9,7 @@ permissions:
   issues: write
 jobs:
   process:
-    if: github.event.label.name == 'horme-ready'
+    if: github.event.label.name == 'hermes-ready'
     runs-on: ubuntu-latest
     environment: agents
     steps:
